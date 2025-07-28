@@ -1,1 +1,26 @@
+# Артефакты компиляции
 /target
+
+# IDE и редакторы
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Файлы окружения и локальных настроек
+.env
+*.local
+
+# Слои Docker (если есть)
+docker-compose.override.yml
+
+# Логи
+*.log
+
+# Артефакты тестов и покрытия
+coverage/
+*.profraw
+
+# Файлы пакетов (не нужны в репо)
+*.zip
+*.tar.gz
