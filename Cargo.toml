@@ -2,5 +2,56 @@
 name = "file_tamer"
 version = "0.1.0"
 edition = "2024"
+description = "CLI utility for cleaning and moving files"
+repository = "https://github.com/SandaL-max/FileTamer"
+authors = ["Alexandr Prokopev smartyalexpro@gmail.com"]
+
+[features]
+default = []
+# Optional features for async and parallel processing
+async = ["tokio"]
+parallel = ["rayon"]
 
 [dependencies]
+# CLI parsing
+clap = { version = "4.1", features = ["derive"] }
+
+# Configuration deserialization
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+
+
+# File system traversal and filtering
+walkdir = "2.5.0"
+globset = "0.4.16"
+# For advanced regex patterns if needed
+regex = "1.11.1"
+
+# File operations and archiving
+zip = "4.3.0"
+tar = "0.4.44"
+flate2 = "1.1.2"
+
+# Logging
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+
+# Error handling
+anyhow = "1.0.98"
+thiserror = "2.0.12"
+
+# Optional async support
+tokio = { version = "1", features = ["full"], optional = true }
+
+# Optional parallel processing
+rayon = { version = "1", optional = true }
+
+
+[dev-dependencies]
+# For file-system based integration tests\assert_fs = "1.0"
+# Temporary file utilities
+tempfile = "3.3"
+
+[workspace]
+# Uncomment if part of a workspace
+# members = ["."]
