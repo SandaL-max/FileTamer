@@ -7,37 +7,25 @@ mod logger;
 mod mover;
 mod scanner;
 
+use cli::{Cli, Commands};
 use config::Config;
 
 use tracing::{debug, error, info};
 
 fn main() {
-    let args = cli::parse();
+    let cli = Cli::parse_args();
 
     // Initialize logging
-    logger::init(args.get_logging_level());
+    let _guard = logger::init(cli.get_logging_level());
 
     info!("FileTamer program started!");
 
-    debug!("Arguments: {:#?}", args);
+    debug!("Arguments: {:#?}", cli);
 
-    // TODO: Load configuration
-
-    let config = match args.get_config() {
-        Some(path) => Config::from_file(path),
-        None => Ok(Config::default()),
-    };
-    if let Err(e) = &config {
-        error!("Error loading config: {}", e);
-        std::process::exit(1);
+    match &cli.cmd {
+        Commands::Run(cmd) => cmd.run(),
+        Commands::List(cmd) => cmd.run(),
     }
-    let config = config.unwrap();
-
-    debug!("Config: {:#?}", config);
-
-    // TODO: Scan source folder
-    // TODO: Cleanup (delete or archive)
-    // TODO: Move files
 
     info!("Operations completed.");
 }
