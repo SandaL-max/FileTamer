@@ -57,7 +57,7 @@ fn archive_files(files: &[PathBuf], opts: &CleanupOptions) -> io::Result<()> {
     match opts.archive_format.as_str() {
         "zip" => archive_zip(files, opts, out_path),
         "targz" => archive_targz(files, opts, out_path),
-        "tar" => archive_tar(files, out_path),
+        "tar" => archive_tar(files, opts, out_path),
         other => {
             error!("Unsupported archive format: {}", other);
             Ok(())
@@ -87,12 +87,15 @@ fn archive_zip(files: &[PathBuf], opts: &CleanupOptions, out_path: &Path) -> io:
     Ok(())
 }
 
-fn archive_tar(files: &[PathBuf], out_path: &Path) -> io::Result<()> {
+fn archive_tar(files: &[PathBuf], opts: &CleanupOptions, out_path: &Path) -> io::Result<()> {
     let f = File::create(out_path)?;
     let mut tar = Builder::new(f);
     for path in files {
         let prefix = "/home/pluto/Downloads";
         tar.append_path_with_name(path, path.strip_prefix(prefix).unwrap())?;
+        if !opts.keep_original {
+            fs::remove_file(path).ok();
+        }
         info!("Added {} to TAR {:?}", path.display(), out_path);
     }
     tar.finish()?;

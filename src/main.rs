@@ -8,9 +8,8 @@ mod mover;
 mod scanner;
 
 use cli::{Cli, Commands};
-use config::Config;
 
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 fn main() {
     let cli = Cli::parse_args();
