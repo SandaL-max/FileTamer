@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::scanner;
+use crate::{cleaner, scanner};
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 use tracing::Level;
@@ -56,7 +56,11 @@ pub struct RunCmd {
     pub config: Option<PathBuf>,
 
     /// Show actions without execution
-    #[arg(long, help = "Perform a dry run (show what would be done)")]
+    #[arg(
+        long,
+        help = "Perform a dry run (show what would be done)",
+        default_value_t = false
+    )]
     dry_run: bool,
 }
 
@@ -64,11 +68,18 @@ impl RunCmd {
     pub fn run(&self) {
         let config = get_config(self);
 
-        debug!("Config: {:#?}", config);
+        let files = scanner::scan(&self.source, &config.filters);
 
-        // TODO: Scan source folder
-        // TODO: Cleanup (delete or archive)
+        // Просто печатаем пути
+        for path in &files {
+            debug!("{}", path.display());
+        }
+
+        cleaner::clean(&files, &config.cleanup, self.dry_run);
         // TODO: Move files
+
+        info!("Number of files in source folder: {}", files.len());
+        println!("Number of files in source folder: {}", files.len());
     }
 }
 
