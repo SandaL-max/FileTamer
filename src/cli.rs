@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::{cleaner, scanner};
+use crate::{cleaner, mover, scanner};
 use clap::{Args, Parser, Subcommand};
 use std::path::PathBuf;
 use tracing::Level;
@@ -59,9 +59,10 @@ pub struct RunCmd {
     #[arg(
         long,
         help = "Perform a dry run (show what would be done)",
-        default_value_t = false
+        default_value = "false",
+        num_args=0..=1
     )]
-    dry_run: bool,
+    dry_run: Option<bool>,
 }
 
 impl RunCmd {
@@ -75,8 +76,14 @@ impl RunCmd {
             debug!("{}", path.display());
         }
 
-        cleaner::clean(&files, &config.cleanup, self.dry_run);
-        // TODO: Move files
+        cleaner::clean(&files, &self.source, &config.cleanup, self.dry_run.unwrap());
+        mover::move_files(
+            &files,
+            &self.source,
+            &self.target,
+            &config.transfer,
+            self.dry_run.unwrap(),
+        );
 
         info!("Number of files in source folder: {}", files.len());
         println!("Number of files in source folder: {}", files.len());

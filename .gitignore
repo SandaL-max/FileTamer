@@ -27,3 +27,4 @@ coverage/
 # Package files (not needed in repo)
 *.zip
 *.tar.gz
+*.tar

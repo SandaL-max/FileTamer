@@ -14,7 +14,7 @@ use zip::{
 };
 
 /// Main entry point for cleaning files: delete or archive based on options
-pub fn clean(files: &[PathBuf], opts: &CleanupOptions, dry_run: bool) {
+pub fn clean(files: &[PathBuf], source_root: &Path, opts: &CleanupOptions, dry_run: bool) {
     if opts.archive {
         if dry_run {
             info!(
@@ -22,7 +22,7 @@ pub fn clean(files: &[PathBuf], opts: &CleanupOptions, dry_run: bool) {
                 files.len(),
                 opts.archive_output
             );
-        } else if let Err(e) = archive_files(files, opts) {
+        } else if let Err(e) = archive_files(files, source_root, opts) {
             error!("Archive error: {}", e);
         }
     } else if opts.delete {
@@ -48,7 +48,7 @@ fn delete_file(path: &PathBuf, dry_run: bool) {
     }
 }
 
-fn archive_files(files: &[PathBuf], opts: &CleanupOptions) -> io::Result<()> {
+fn archive_files(files: &[PathBuf], source_root: &Path, opts: &CleanupOptions) -> io::Result<()> {
     let out_path = opts
         .archive_output
         .as_ref()
@@ -56,8 +56,8 @@ fn archive_files(files: &[PathBuf], opts: &CleanupOptions) -> io::Result<()> {
         .unwrap_or(Path::new("archive.zip"));
     match opts.archive_format.as_str() {
         "zip" => archive_zip(files, opts, out_path),
-        "targz" => archive_targz(files, opts, out_path),
-        "tar" => archive_tar(files, opts, out_path),
+        "targz" => archive_targz(files, source_root, opts, out_path),
+        "tar" => archive_tar(files, source_root, opts, out_path),
         other => {
             error!("Unsupported archive format: {}", other);
             Ok(())
@@ -87,12 +87,16 @@ fn archive_zip(files: &[PathBuf], opts: &CleanupOptions, out_path: &Path) -> io:
     Ok(())
 }
 
-fn archive_tar(files: &[PathBuf], opts: &CleanupOptions, out_path: &Path) -> io::Result<()> {
+fn archive_tar(
+    files: &[PathBuf],
+    source_root: &Path,
+    opts: &CleanupOptions,
+    out_path: &Path,
+) -> io::Result<()> {
     let f = File::create(out_path)?;
     let mut tar = Builder::new(f);
     for path in files {
-        let prefix = "/home/pluto/Downloads";
-        tar.append_path_with_name(path, path.strip_prefix(prefix).unwrap())?;
+        tar.append_path_with_name(path, path.strip_prefix(source_root).unwrap())?;
         if !opts.keep_original {
             fs::remove_file(path).ok();
         }
@@ -102,13 +106,17 @@ fn archive_tar(files: &[PathBuf], opts: &CleanupOptions, out_path: &Path) -> io:
     Ok(())
 }
 
-fn archive_targz(files: &[PathBuf], opts: &CleanupOptions, out_path: &Path) -> io::Result<()> {
+fn archive_targz(
+    files: &[PathBuf],
+    source_root: &Path,
+    opts: &CleanupOptions,
+    out_path: &Path,
+) -> io::Result<()> {
     let f = File::create(out_path)?;
     let enc = GzEncoder::new(f, Compression::new(opts.compression_level));
     let mut tar = Builder::new(enc);
     for path in files {
-        let prefix = "/home/pluto/Downloads";
-        tar.append_path_with_name(path, path.strip_prefix(prefix).unwrap())?;
+        tar.append_path_with_name(path, path.strip_prefix(source_root).unwrap())?;
         if !opts.keep_original {
             fs::remove_file(path).ok();
         }
